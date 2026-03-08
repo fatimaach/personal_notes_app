@@ -3,86 +3,241 @@
 <head>
   <title>Dashboard - Personal Notes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>body { background: #f7f8fc; }</style>
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    body { background: #f7f8fc; }
+    .note-date { font-size: 13px; color: gray; }
+  </style>
 </head>
+
 <body onload="loadDashboard()">
-  <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Welcome, <span id="username"></span>!</h2>
-      <button class="btn btn-danger" onclick="logout()">Logout</button>
-    </div>
-    <div class="card p-3 shadow mb-4">
-      <textarea id="noteContent" class="form-control mb-3" placeholder="Write your note here..."></textarea>
-      <button class="btn btn-success" onclick="addNote()">Add Note</button>
-    </div>
-    <div id="notesList" class="row"></div>
+
+<div class="container py-5" style="max-width: 1100px;">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Welcome, <span id="username"></span>!</h2>
+    <button class="btn btn-danger" onclick="logout()">Logout</button>
   </div>
 
-<script>
-const token = localStorage.getItem("token");
-if (!token) window.location.href = "login.html";
+  <!-- Add / Edit Note -->
+  <div class="card p-4 shadow mb-4">
 
-document.getElementById("username").innerText = localStorage.getItem("name");
-// Function to handle expired tokens automatically
-async function fetchWithAuth(url, options = {}) {
-    const res = await fetch(url, { 
-        ...options, 
-        headers: { ...options.headers, "x-auth-token": token } 
-    });
-    if (res.status === 401) {  // Token expired or invalid
-        alert("Session expired. Please login again.");
-        logout();
-    }
-    return res;
+    <h4 id="formHeading">Add New Note</h4>
+
+    <input
+      type="text"
+      id="noteTitle"
+      class="form-control mb-3"
+      placeholder="Enter note title"
+    >
+
+    <textarea
+      id="noteContent"
+      class="form-control mb-3"
+      placeholder="Write your note here..."
+    ></textarea>
+
+    <button class="btn btn-success" onclick="saveNote()">Save Note</button>
+
+  </div>
+
+  <!-- Search -->
+  <div class="card p-3 shadow mb-4">
+    <input
+      type="text"
+      id="searchInput"
+      class="form-control"
+      placeholder="Search notes..."
+      onkeyup="filterNotes()"
+    >
+  </div>
+
+  <!-- Notes -->
+  <div id="notesList" class="row"></div>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("token");
+const API_BASE = window.location.origin;
+
+let allNotes = [];
+let editingNoteId = null;
+
+if (!token) {
+  window.location.href = "login.html";
 }
-// Auto-logout after 30 seconds (client-side)
-setTimeout(() => {
+
+document.getElementById("username").innerText =
+  localStorage.getItem("name") || "User";
+
+
+async function fetchWithAuth(url, options = {}) {
+
+  const config = {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      "x-auth-token": token
+    }
+  };
+
+  const res = await fetch(url, config);
+
+  if (res.status === 401) {
     alert("Session expired. Please login again.");
     logout();
-}, 30000);
+  }
 
-async function addNote() {
-    const content = document.getElementById("noteContent").value;
-    const res = await fetchWithAuth("http://localhost:5000/api/notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content })
-    });
-    if (res.ok) {
-        document.getElementById("noteContent").value = "";
-        loadDashboard();
-    } else {
-        alert("Error adding note");
-    }
+  return res;
 }
+
+
+async function saveNote() {
+
+  const title = document.getElementById("noteTitle").value.trim();
+  const content = document.getElementById("noteContent").value.trim();
+
+  if (!title || !content) {
+    alert("Please enter title and content");
+    return;
+  }
+
+  const url = editingNoteId
+    ? `${API_BASE}/api/notes/${editingNoteId}`
+    : `${API_BASE}/api/notes`;
+
+  const method = editingNoteId ? "PUT" : "POST";
+
+  const res = await fetchWithAuth(url, {
+    method: method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, content })
+  });
+
+  if (res.ok) {
+    clearForm();
+    loadDashboard();
+  } else {
+    alert("Error saving note");
+  }
+}
+
 
 async function loadDashboard() {
-     const res = await fetchWithAuth("http://localhost:5000/api/notes");
-    const notes = await res.json();
-    const container = document.getElementById("notesList");
-    container.innerHTML = "";
-    notes.forEach(note => {
-        container.innerHTML += `
-          <div class="col-md-4 mb-3">
-            <div class="card p-3 shadow">
-              <p>${note.content}</p>
-              <button class="btn btn-danger btn-sm" onclick="deleteNote('${note._id}')">Delete</button>
-            </div>
-          </div>`;
-    });
+
+  const res = await fetchWithAuth(`${API_BASE}/api/notes`);
+  const notes = await res.json();
+
+  allNotes = notes;
+
+  renderNotes(notes);
 }
+
+
+function renderNotes(notes) {
+
+  const container = document.getElementById("notesList");
+  container.innerHTML = "";
+
+  if (notes.length === 0) {
+    container.innerHTML = `<p class="text-center text-muted">No notes yet</p>`;
+    return;
+  }
+
+  notes.forEach(note => {
+
+    container.innerHTML += `
+      <div class="col-md-4 mb-3">
+        <div class="card p-3 shadow">
+
+          <h5>${note.title}</h5>
+          <p>${note.content}</p>
+
+          <p class="note-date">
+            Created: ${new Date(note.createdAt).toLocaleString()}
+          </p>
+
+          <button class="btn btn-primary btn-sm"
+            onclick="editNote('${note._id}')">
+            Edit
+          </button>
+
+          <button class="btn btn-danger btn-sm"
+            onclick="deleteNote('${note._id}')">
+            Delete
+          </button>
+
+        </div>
+      </div>
+    `;
+  });
+}
+
+
+function editNote(id) {
+
+  const note = allNotes.find(n => n._id === id);
+
+  document.getElementById("noteTitle").value = note.title;
+  document.getElementById("noteContent").value = note.content;
+
+  document.getElementById("formHeading").innerText = "Edit Note";
+
+  editingNoteId = id;
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 
 async function deleteNote(id) {
-    await fetchWithAuth("http://localhost:5000/api/notes/" + id, {
-        method: "DELETE"
-    });
-    loadDashboard();
+
+  const confirmDelete = confirm("Delete this note?");
+  if (!confirmDelete) return;
+
+  await fetchWithAuth(`${API_BASE}/api/notes/${id}`, {
+    method: "DELETE"
+  });
+
+  loadDashboard();
 }
 
-function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
+
+function filterNotes() {
+
+  const value = document
+    .getElementById("searchInput")
+    .value
+    .toLowerCase();
+
+  const filtered = allNotes.filter(note =>
+    note.title.toLowerCase().includes(value) ||
+    note.content.toLowerCase().includes(value)
+  );
+
+  renderNotes(filtered);
 }
+
+
+function clearForm() {
+
+  document.getElementById("noteTitle").value = "";
+  document.getElementById("noteContent").value = "";
+
+  document.getElementById("formHeading").innerText = "Add New Note";
+
+  editingNoteId = null;
+}
+
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
 </script>
+
 </body>
 </html>

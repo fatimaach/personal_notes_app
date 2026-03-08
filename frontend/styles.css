@@ -1,0 +1,44 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f7fc;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+h1, h2, h4, h5 {
+  color: #222;
+}
+
+.card {
+  border: none;
+  border-radius: 14px;
+}
+
+input,
+textarea {
+  border-radius: 8px !important;
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+button {
+  border-radius: 8px !important;
+}
+
+.note-date {
+  font-size: 13px;
+  color: #777;
+}
+
+#notesList .card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#notesList .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
