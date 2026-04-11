@@ -6,13 +6,6 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/fatimaazam/personal_notes_app'
-            }
-        }
-
         stage('Create Env') {
             steps {
                 sh '''
