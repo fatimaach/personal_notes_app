@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    triggers {
-        githubPush()
-    }
-
     stages {
         stage('Create Env') {
             steps {
@@ -18,12 +14,21 @@ EOF
             }
         }
 
-        stage('Build & Deploy') {
+        stage('Stop Old Part 2') {
             steps {
-                sh '''
-                docker compose -f docker-compose.jenkins.yml down || true
-                docker compose -f docker-compose.jenkins.yml up -d --build
-                '''
+                sh 'docker compose -f docker-compose.jenkins.yml down || true'
+            }
+        }
+
+        stage('Start Part 2') {
+            steps {
+                sh 'docker compose -f docker-compose.jenkins.yml up -d'
+            }
+        }
+
+        stage('Show Containers') {
+            steps {
+                sh 'docker ps'
             }
         }
     }
