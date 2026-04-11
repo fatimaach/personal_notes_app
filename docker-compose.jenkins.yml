@@ -1,6 +1,6 @@
 services:
   app:
-    build: .
+    image: fatimaazam/personal-notes-app:latest
     container_name: notes_app_ci
     ports:
       - "5001:5000"
