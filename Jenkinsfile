@@ -14,13 +14,13 @@ EOF
             }
         }
 
-        stage('Stop Old Part 2') {
+        stage('Stop Old Deployment') {
             steps {
                 sh 'docker compose -f docker-compose.jenkins.yml down || true'
             }
         }
 
-        stage('Start Part 2') {
+        stage('Start Deployment') {
             steps {
                 sh 'docker compose -f docker-compose.jenkins.yml up -d'
             }
