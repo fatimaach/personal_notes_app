@@ -16,13 +16,13 @@ EOF
 
         stage('Stop Old Deployment') {
             steps {
-                sh 'docker compose -f docker-compose.jenkins.yml down || true'
+                sh 'docker-compose -f docker-compose.jenkins.yml down || true'
             }
         }
 
         stage('Start Deployment') {
             steps {
-                sh 'docker compose -f docker-compose.jenkins.yml up -d'
+                sh 'docker-compose -f docker-compose.jenkins.yml up -d'
             }
         }
 
