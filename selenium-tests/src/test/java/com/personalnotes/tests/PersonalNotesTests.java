@@ -16,12 +16,13 @@ import java.util.List;
 public class PersonalNotesTests {
     private WebDriver driver;
     private WebDriverWait wait;
-    private final String BASE_URL = "http://localhost";
+    private String baseUrl;
     private final String TEST_EMAIL = "testuser" + System.currentTimeMillis() + "@example.com";
     private final String TEST_PASSWORD = "Test@12345";
 
     @BeforeClass
     public void setUp() {
+        baseUrl = System.getenv().getOrDefault("APP_URL", "http://localhost:5001");
         WebDriverManager.chromedriver().setup();
         
         ChromeOptions options = new ChromeOptions();
@@ -46,7 +47,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 1)
     public void testSignupPageLoads() {
-        driver.get(BASE_URL + "/signup.html");
+        driver.get(baseUrl + "/signup.html");
         WebElement signupForm = wait.until(ExpectedConditions.presenceOfElementLocated(
             By.xpath("//h2[contains(text(), 'Sign Up')]")));
         assert signupForm.isDisplayed() : "Signup page did not load";
@@ -54,7 +55,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 2)
     public void testSignupWithValidCredentials() throws InterruptedException {
-        driver.get(BASE_URL + "/signup.html");
+        driver.get(baseUrl + "/signup.html");
         
         WebElement emailField = wait.until(ExpectedConditions.presenceOfElementLocated(
             By.xpath("//input[@placeholder='Email']")));
@@ -73,7 +74,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 3)
     public void testSignupEmptyEmail() throws InterruptedException {
-        driver.get(BASE_URL + "/signup.html");
+        driver.get(baseUrl + "/signup.html");
         
         WebElement passwordField = driver.findElement(By.xpath("//input[@placeholder='Password']"));
         WebElement signupButton = driver.findElement(By.xpath("//button[contains(text(), 'Sign Up')]"));
@@ -89,7 +90,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 4)
     public void testSignupEmptyPassword() throws InterruptedException {
-        driver.get(BASE_URL + "/signup.html");
+        driver.get(baseUrl + "/signup.html");
         
         WebElement emailField = driver.findElement(By.xpath("//input[@placeholder='Email']"));
         WebElement signupButton = driver.findElement(By.xpath("//button[contains(text(), 'Sign Up')]"));
@@ -105,7 +106,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 5)
     public void testSignupWeakPassword() throws InterruptedException {
-        driver.get(BASE_URL + "/signup.html");
+        driver.get(baseUrl + "/signup.html");
         
         WebElement emailField = driver.findElement(By.xpath("//input[@placeholder='Email']"));
         WebElement passwordField = driver.findElement(By.xpath("//input[@placeholder='Password']"));
@@ -125,7 +126,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 6)
     public void testLoginPageLoads() {
-        driver.get(BASE_URL + "/login.html");
+        driver.get(baseUrl + "/login.html");
         WebElement loginForm = wait.until(ExpectedConditions.presenceOfElementLocated(
             By.xpath("//h2[contains(text(), 'Login')]")));
         assert loginForm.isDisplayed() : "Login page did not load";
@@ -133,7 +134,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 7)
     public void testLoginWithValidCredentials() throws InterruptedException {
-        driver.get(BASE_URL + "/login.html");
+        driver.get(baseUrl + "/login.html");
         
         WebElement emailField = wait.until(ExpectedConditions.presenceOfElementLocated(
             By.xpath("//input[@placeholder='Email']")));
@@ -151,7 +152,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 8)
     public void testLoginEmptyEmail() throws InterruptedException {
-        driver.get(BASE_URL + "/login.html");
+        driver.get(baseUrl + "/login.html");
         
         WebElement passwordField = driver.findElement(By.xpath("//input[@placeholder='Password']"));
         WebElement loginButton = driver.findElement(By.xpath("//button[contains(text(), 'Login')]"));
@@ -167,7 +168,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 9)
     public void testLoginEmptyPassword() throws InterruptedException {
-        driver.get(BASE_URL + "/login.html");
+        driver.get(baseUrl + "/login.html");
         
         WebElement emailField = driver.findElement(By.xpath("//input[@placeholder='Email']"));
         WebElement loginButton = driver.findElement(By.xpath("//button[contains(text(), 'Login')]"));
@@ -183,7 +184,7 @@ public class PersonalNotesTests {
 
     @Test(priority = 10)
     public void testLoginWithInvalidCredentials() throws InterruptedException {
-        driver.get(BASE_URL + "/login.html");
+        driver.get(baseUrl + "/login.html");
         
         WebElement emailField = driver.findElement(By.xpath("//input[@placeholder='Email']"));
         WebElement passwordField = driver.findElement(By.xpath("//input[@placeholder='Password']"));
@@ -291,7 +292,7 @@ public class PersonalNotesTests {
     // ==================== HELPER METHODS ====================
 
     private void loginUser() throws InterruptedException {
-        driver.get(BASE_URL + "/login.html");
+        driver.get(baseUrl + "/login.html");
         
         WebElement emailField = wait.until(ExpectedConditions.presenceOfElementLocated(
             By.xpath("//input[@placeholder='Email']")));
