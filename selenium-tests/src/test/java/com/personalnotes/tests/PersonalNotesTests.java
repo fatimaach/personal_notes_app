@@ -31,6 +31,7 @@ public class PersonalNotesTests {
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--window-size=1920,1080");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36");
         
@@ -213,7 +214,7 @@ public class PersonalNotesTests {
         WebElement noteCard = waitForNoteCard(title);
         WebElement editBtn = wait.until(ExpectedConditions.elementToBeClickable(
             noteCard.findElement(By.xpath(".//button[contains(text(), 'Edit')]"))));
-        editBtn.click();
+        scrollAndClick(editBtn);
 
         WebElement titleField = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("noteTitle")));
         WebElement bodyField = driver.findElement(By.id("noteContent"));
@@ -240,7 +241,7 @@ public class PersonalNotesTests {
         WebElement noteCard = waitForNoteCard(title);
         WebElement deleteBtn = wait.until(ExpectedConditions.elementToBeClickable(
             noteCard.findElement(By.xpath(".//button[contains(text(), 'Delete')]"))));
-        deleteBtn.click();
+        scrollAndClick(deleteBtn);
 
         String confirmText = waitForAlertText();
         assert "Delete this note?".equals(confirmText) : "Unexpected confirm text: " + confirmText;
@@ -305,6 +306,26 @@ public class PersonalNotesTests {
             By.xpath("//div[@id='notesList']//div[contains(@class,'card')][.//h5[normalize-space()=" +
                 "'" + title + "']]")
         ));
+    }
+
+    private void scrollAndClick(WebElement element) {
+        ((JavascriptExecutor) driver).executeScript(
+            "arguments[0].scrollIntoView({block: 'center'});", element
+        );
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        wait.until(ExpectedConditions.elementToBeClickable(element));
+
+        try {
+            element.click();
+        } catch (Exception e) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+        }
     }
 
     private String waitForAlertText() {

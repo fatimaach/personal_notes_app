@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
+        FALLBACK_EMAILS = 'fatimaazam2111@gmail.com'
         COMMIT_AUTHOR_EMAIL = ''
-        FALLBACK_EMAIL = 'fatimaazam2111@gmail.com'
+        FINAL_RECIPIENTS = ''
     }
 
     stages {
@@ -15,12 +16,20 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    if (!email || email == 'null' || email == 'null@gmail.com' || email.contains('users.noreply.github.com')) {
-                        email = env.FALLBACK_EMAIL
+                    if (
+                        !email ||
+                        email == 'null' ||
+                        email == 'null@gmail.com' ||
+                        email.contains('users.noreply.github.com')
+                    ) {
+                        email = env.FALLBACK_EMAILS
                     }
 
                     env.COMMIT_AUTHOR_EMAIL = email
-                    echo "Email will be sent to: ${env.COMMIT_AUTHOR_EMAIL}"
+                    env.FINAL_RECIPIENTS = email
+
+                    echo "Commit author email detected: ${env.COMMIT_AUTHOR_EMAIL}"
+                    echo "Email will be sent to: ${env.FINAL_RECIPIENTS}"
                 }
             }
         }
@@ -100,10 +109,15 @@ EOF
     post {
         always {
             script {
-                def recipient = env.COMMIT_AUTHOR_EMAIL?.trim()
+                def recipient = env.FINAL_RECIPIENTS?.trim()
 
-                if (!recipient || recipient == 'null' || recipient == 'null@gmail.com' || recipient.contains('users.noreply.github.com')) {
-                    recipient = env.FALLBACK_EMAIL
+                if (
+                    !recipient ||
+                    recipient == 'null' ||
+                    recipient == 'null@gmail.com' ||
+                    recipient.contains('users.noreply.github.com')
+                ) {
+                    recipient = env.FALLBACK_EMAILS
                 }
 
                 echo "Final email recipient: ${recipient}"
