@@ -32,33 +32,22 @@ EOF
             }
         }
 
-                stage('Wait for App') {
-                        steps {
-                                sh '''
-                                MAX=30
-                                i=0
-                                while [ $i -lt $MAX ]; do
-                                    if curl -sSf http://localhost:5001 > /dev/null 2>&1; then
-                                        echo "App is reachable at http://localhost:5001"
-                                        exit 0
-                                    fi
-                                    if curl -sSf http://localhost:80 > /dev/null 2>&1; then
-                                        echo "App is reachable at http://localhost:80"
-                                        exit 0
-                                    fi
-                                    i=$((i+1))
-                                    sleep 2
-                                done
-                                echo "App did not respond after $MAX attempts"
-                                exit 1
-                                '''
-                        }
-                }
-
-        stage('Check Deployment') {
+        stage('Wait for App') {
             steps {
                 sh '''
-                curl -sSf http://localhost:5001 >/dev/null 2>&1 || curl -sSf http://localhost:80 >/dev/null 2>&1
+                # Wait for the app on port 5000 (max 30 attempts)
+                MAX=30
+                i=0
+                while [ $i -lt $MAX ]; do
+                  if curl -sSf --max-time 5 http://localhost:5000 > /dev/null 2>&1; then
+                    echo "App is reachable at http://localhost:5000"
+                    exit 0
+                  fi
+                  i=$((i+1))
+                  sleep 2
+                done
+                echo "App did not respond after $MAX attempts"
+                exit 1
                 '''
             }
         }
@@ -66,7 +55,6 @@ EOF
         stage('Run Selenium Tests in Docker') {
             steps {
                 sh '''
-                # Run the Selenium test suite inside the markhobson/maven-chrome container
                 docker run --rm --network host -v "$PWD/selenium-tests":/workspace -w /workspace markhobson/maven-chrome mvn test
                 '''
             }
