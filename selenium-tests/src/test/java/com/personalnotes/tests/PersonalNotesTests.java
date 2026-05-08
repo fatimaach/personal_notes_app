@@ -196,7 +196,7 @@ public class PersonalNotesTests {
         resetSession();
         signupUser(newTestEmail(), TEST_PASSWORD);
         String title = "Test Note " + System.currentTimeMillis();
-        createNote(title, "This is a test note body");
+        createNote(title, "This is a test note body " + System.currentTimeMillis());
 
         String pageSource = driver.getPageSource();
         assert pageSource.contains(title) : "Note was not added to dashboard";
@@ -207,16 +207,18 @@ public class PersonalNotesTests {
         resetSession();
         signupUser(newTestEmail(), TEST_PASSWORD);
         String title = "Edit Note " + System.currentTimeMillis();
-        createNote(title, "Original content");
+        String updatedTitle = title + " Updated";
+        createNote(title, "Original content " + System.currentTimeMillis());
 
-        WebElement editBtn = wait.until(ExpectedConditions.presenceOfElementLocated(
-            By.xpath("//button[contains(text(), 'Edit')]")));
+        WebElement noteCard = waitForNoteCard(title);
+        WebElement editBtn = wait.until(ExpectedConditions.elementToBeClickable(
+            noteCard.findElement(By.xpath(".//button[contains(text(), 'Edit')]"))));
         editBtn.click();
 
         WebElement titleField = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("noteTitle")));
         WebElement bodyField = driver.findElement(By.id("noteContent"));
         titleField.clear();
-        titleField.sendKeys(title + " Updated");
+        titleField.sendKeys(updatedTitle);
         bodyField.clear();
         bodyField.sendKeys("Updated note content");
 
@@ -224,7 +226,7 @@ public class PersonalNotesTests {
             .click();
 
         wait.until(ExpectedConditions.textToBePresentInElementLocated(
-            By.id("notesList"), "Updated note content"));
+            By.id("notesList"), updatedTitle));
         assert driver.getPageSource().contains("Updated note content") : "Note was not updated";
     }
 
@@ -233,10 +235,11 @@ public class PersonalNotesTests {
         resetSession();
         signupUser(newTestEmail(), TEST_PASSWORD);
         String title = "Delete Note " + System.currentTimeMillis();
-        createNote(title, "To delete");
+        createNote(title, "To delete " + System.currentTimeMillis());
 
-        WebElement deleteBtn = wait.until(ExpectedConditions.presenceOfElementLocated(
-            By.xpath("//button[contains(text(), 'Delete')]")));
+        WebElement noteCard = waitForNoteCard(title);
+        WebElement deleteBtn = wait.until(ExpectedConditions.elementToBeClickable(
+            noteCard.findElement(By.xpath(".//button[contains(text(), 'Delete')]"))));
         deleteBtn.click();
 
         String confirmText = waitForAlertText();
@@ -295,6 +298,13 @@ public class PersonalNotesTests {
             .click();
 
         wait.until(ExpectedConditions.textToBePresentInElementLocated(By.id("notesList"), title));
+    }
+
+    private WebElement waitForNoteCard(String title) {
+        return wait.until(ExpectedConditions.presenceOfElementLocated(
+            By.xpath("//div[@id='notesList']//div[contains(@class,'card')][.//h5[normalize-space()=" +
+                "'" + title + "']]")
+        ));
     }
 
     private String waitForAlertText() {
