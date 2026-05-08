@@ -35,18 +35,28 @@ EOF
         stage('Wait for App') {
             steps {
                 sh '''
-                # Wait for the app on port 5000 (max 30 attempts)
+                # App container internal port is 5000, but host port is 5001
                 MAX=30
                 i=0
+
                 while [ $i -lt $MAX ]; do
-                  if curl -sSf --max-time 5 http://localhost:5000 > /dev/null 2>&1; then
-                    echo "App is reachable at http://localhost:5000"
+                  if curl -sSf --max-time 5 http://localhost:5001 > /dev/null 2>&1; then
+                    echo "App is reachable at http://localhost:5001"
                     exit 0
                   fi
+
                   i=$((i+1))
+                  echo "Waiting for app... attempt $i/$MAX"
                   sleep 2
                 done
+
                 echo "App did not respond after $MAX attempts"
+                echo "===== Running containers ====="
+                docker ps
+                echo "===== App logs ====="
+                docker logs notes_app_ci || true
+                echo "===== Mongo logs ====="
+                docker logs notes_mongo_ci || true
                 exit 1
                 '''
             }
@@ -55,7 +65,11 @@ EOF
         stage('Run Selenium Tests in Docker') {
             steps {
                 sh '''
-                docker run --rm --network host -v "$PWD/selenium-tests":/workspace -w /workspace markhobson/maven-chrome mvn test
+                docker run --rm --network host \
+                  -e APP_URL=http://localhost:5001 \
+                  -v "$PWD/selenium-tests":/workspace \
+                  -w /workspace \
+                  markhobson/maven-chrome mvn test
                 '''
             }
         }
