@@ -1,6 +1,7 @@
 .env
 backend/.env
 node_modules
+ .vscode/
 selenium-tests/target/
 *.class
 surefire-reports/
